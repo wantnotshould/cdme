@@ -11,6 +11,7 @@ import (
 	"code.cn/blog/internal/dto/req"
 	"code.cn/blog/internal/dto/resp"
 	"code.cn/blog/internal/service"
+	"code.cn/blog/pkg/validator"
 	"github.com/gin-gonic/gin"
 )
 
@@ -107,6 +108,11 @@ func (h *PostHandler) Create(c *gin.Context) {
 		return
 	}
 
+	if !validator.SlugRe.MatchString(param.Slug) {
+		common.FailMessage(c.Writer, "invalid slug")
+		return
+	}
+
 	param.UserID = middleware.GetUserID(c)
 
 	ctx := c.Request.Context()
@@ -129,6 +135,11 @@ func (h *PostHandler) Update(c *gin.Context) {
 	var param req.PostUpdate
 	if err := c.ShouldBindJSON(&param); err != nil {
 		common.Fail(c.Writer, code.ParamErr)
+		return
+	}
+
+	if !validator.SlugRe.MatchString(param.Slug) {
+		common.FailMessage(c.Writer, "invalid slug")
 		return
 	}
 
