@@ -5,13 +5,16 @@
 package conf
 
 import (
+	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"code.cn/blog/cmd/flags"
 	"code.cn/blog/pkg/utils"
@@ -41,12 +44,47 @@ type Redis struct {
 	Prefix   string `json:"prefix"`
 }
 
+type Database struct {
+	Host         string        `json:"host"`
+	Port         string        `json:"port"`
+	User         string        `json:"user"`
+	Password     string        `json:"password"`
+	DBName       string        `json:"db_name"`
+	Timezone     string        `json:"timezone"`
+	MaxIdleConns int           `json:"max_idle_conns"`
+	MaxOpenConns int           `json:"max_open_conns"`
+	MaxLifetime  time.Duration `json:"max_lifetime"`
+}
+
+func (d *Database) DSN() string {
+	tz := d.Timezone
+	if tz == "" {
+		tz = "Asia/Shanghai"
+	}
+
+	params := url.Values{}
+	params.Set("charset", "utf8mb4")
+	params.Set("parseTime", "True")
+	params.Set("loc", tz)
+
+	return fmt.Sprintf(
+		"%s:%s@tcp(%s:%s)/%s?%s",
+		d.User,
+		d.Password,
+		d.Host,
+		d.Port,
+		d.DBName,
+		params.Encode(),
+	)
+}
+
 type Config struct {
-	Scheme Scheme `json:"scheme"`
-	Hash   Hash   `json:"hash"`
-	AESGCM AESGCM `json:"aesgcm"`
-	JWT    JWT    `json:"jwt"`
-	Redis  Redis  `json:"redis"`
+	Scheme   Scheme   `json:"scheme"`
+	Hash     Hash     `json:"hash"`
+	AESGCM   AESGCM   `json:"aesgcm"`
+	JWT      JWT      `json:"jwt"`
+	Redis    Redis    `json:"redis"`
+	Database Database `json:"database"`
 }
 
 func (c *Config) validate() error {
@@ -77,6 +115,26 @@ func (c *Config) validate() error {
 
 	if c.Redis.Prefix == "" {
 		return utils.Err("redis prefix can't be empty")
+	}
+
+	if c.Database.Host == "" {
+		return utils.Err("database host can't be empty")
+	}
+
+	if c.Database.Port == "" {
+		return utils.Err("database port can't be empty")
+	}
+
+	if c.Database.User == "" {
+		return utils.Err("database user can't be empty")
+	}
+
+	if c.Database.Password == "" {
+		return utils.Err("database password can't be empty")
+	}
+
+	if c.Database.DBName == "" {
+		return utils.Err("database name can't be empty")
 	}
 
 	return nil
@@ -115,6 +173,17 @@ func defaultConfig() *Config {
 			Password: "",
 			DB:       0,
 			Prefix:   "cdme_blog",
+		},
+		Database: Database{
+			Host:         "127.0.0.1",
+			Port:         "3306",
+			User:         "root",
+			Password:     "root",
+			DBName:       "blog",
+			Timezone:     "Asia/Shanghai",
+			MaxIdleConns: 10,
+			MaxOpenConns: 100,
+			MaxLifetime:  time.Hour,
 		},
 	}
 }
