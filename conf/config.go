@@ -78,6 +78,13 @@ func (d *Database) DSN() string {
 	)
 }
 
+type Logger struct {
+	LogsDir    string `json:"logs_dir"`
+	MaxSize    int    `json:"max_size"` // MB
+	MaxBackups int    `json:"max_backups"`
+	MaxAge     int    `json:"max_age"`
+}
+
 type Config struct {
 	Scheme   Scheme   `json:"scheme"`
 	Hash     Hash     `json:"hash"`
@@ -85,6 +92,7 @@ type Config struct {
 	JWT      JWT      `json:"jwt"`
 	Redis    Redis    `json:"redis"`
 	Database Database `json:"database"`
+	Logger   Logger   `json:"logger"`
 }
 
 func (c *Config) validate() error {
@@ -137,6 +145,22 @@ func (c *Config) validate() error {
 		return utils.Err("database name can't be empty")
 	}
 
+	if c.Logger.LogsDir == "" {
+		return utils.Err("logger logs_dir can't be empty")
+	}
+
+	if c.Logger.MaxSize <= 0 {
+		return utils.Err("logger max_size must be greater than 0")
+	}
+
+	if c.Logger.MaxBackups < 0 {
+		return utils.Err("logger max_backups can't be negative")
+	}
+
+	if c.Logger.MaxAge < 0 {
+		return utils.Err("logger max_age can't be negative")
+	}
+
 	return nil
 }
 
@@ -151,6 +175,8 @@ func Get() *Config {
 }
 
 func defaultConfig() *Config {
+	logsDir := filepath.Join(flags.Data, "logs")
+
 	return &Config{
 		Scheme: Scheme{
 			Port: ":2603",
@@ -184,6 +210,12 @@ func defaultConfig() *Config {
 			MaxIdleConns: 10,
 			MaxOpenConns: 100,
 			MaxLifetime:  time.Hour,
+		},
+		Logger: Logger{
+			LogsDir:    logsDir,
+			MaxSize:    50,
+			MaxBackups: 10,
+			MaxAge:     24,
 		},
 	}
 }

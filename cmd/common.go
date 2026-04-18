@@ -13,6 +13,7 @@ import (
 	"code.cn/blog/conf"
 	"code.cn/blog/internal/cache/redis"
 	"code.cn/blog/internal/database"
+	"code.cn/blog/internal/logger"
 	"code.cn/blog/internal/repository"
 	"code.cn/blog/pkg/crypto/aes"
 )
@@ -60,6 +61,7 @@ func startCleanupTasks() {
 
 func setup() {
 	conf.Init()
+	logger.Init()
 	aes.Init([]byte(conf.Get().AESGCM.Key))
 	redis.Init()
 
@@ -87,4 +89,6 @@ func release() {
 	if database.Instance() != nil {
 		_ = database.Instance().Close()
 	}
+
+	logger.Close()
 }
