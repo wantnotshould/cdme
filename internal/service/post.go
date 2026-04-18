@@ -83,6 +83,56 @@ func validatePost(status uint8, categoryID uint8) error {
 	return nil
 }
 
+func (s *PostService) List(ctx context.Context, param req.PostList) ([]resp.PostListItem, int64, error) {
+	if err := validatePost(param.Status, param.CategoryID); err != nil {
+		return nil, 0, err
+	}
+
+	list, count, err := s.repo.List(ctx, param)
+	if err != nil {
+		return nil, 0, utils.Err("failed to fetch posts from repository")
+	}
+
+	rows := make([]resp.PostListItem, len(list))
+	for i, v := range list {
+		rows[i] = resp.PostListItem{
+			ID:         v.ID,
+			CategoryID: uint8(v.CategoryID),
+			Title:      v.Title,
+			Summary:    v.Summary,
+			Slug:       v.Slug,
+			Status:     uint8(v.Status),
+			CreatedAt:  v.CreatedAt,
+			UpdatedAt:  v.UpdatedAt,
+		}
+	}
+
+	return rows, count, nil
+}
+
+func (s *PostService) Info(ctx context.Context, param req.InfoPathParams) (*resp.PostInfo, error) {
+	info, err := s.repo.Info(ctx, param)
+	if err != nil {
+		return nil, utils.Err("failed to fetch post details from repository")
+	}
+
+	if info == nil {
+		return nil, utils.Err("post not found")
+	}
+
+	return &resp.PostInfo{
+		ID:         info.ID,
+		CategoryID: uint8(info.CategoryID),
+		Title:      info.Title,
+		Slug:       info.Slug,
+		Summary:    info.Summary,
+		Content:    info.Content,
+		Status:     uint8(info.Status),
+		CreatedAt:  info.CreatedAt,
+		UpdatedAt:  info.UpdatedAt,
+	}, nil
+}
+
 func (s *PostService) Create(ctx context.Context, param req.PostCreate) error {
 	if err := validatePost(param.Status, param.CategoryID); err != nil {
 		return err
@@ -145,4 +195,43 @@ func (s *PostService) Update(ctx context.Context, param req.PostUpdate) error {
 		"content":     param.Content,
 		"status":      param.Status,
 	})
+}
+
+func (s *PostService) Delete(ctx context.Context, param req.DeletePathParams) error {
+	info, err := s.repo.Info(ctx, req.InfoPathParams{
+		InfoID: param.DeleteID,
+		UserID: param.UserID,
+	})
+	if err != nil {
+		return utils.Err("failed to fetch post details for deletion")
+	}
+
+	if info == nil {
+		return utils.Err("post not found")
+	}
+
+	err = s.repo.Delete(ctx, param)
+	if err != nil {
+		return utils.Err("failed to delete post")
+	}
+
+	return nil
+}
+
+func (s *PostService) BatchDelete(ctx context.Context, param req.BatchDelete) error {
+
+	if len(param.DeleteIds) == 0 {
+		return utils.Err("no post IDs provided for batch deletion")
+	}
+
+	count, err := s.repo.CountByIDsAndUser(ctx, param.UserID, param.DeleteIds)
+	if err != nil {
+		return utils.Err("system busy")
+	}
+
+	if count != int64(len(param.DeleteIds)) {
+		return utils.Err("one or more posts not found or not owned by user")
+	}
+
+	return s.repo.BatchDelete(ctx, param)
 }
