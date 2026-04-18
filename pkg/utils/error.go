@@ -37,7 +37,3 @@ func Wrapf(err error, format string, args ...any) error {
 	context := fmt.Sprintf(format, args...)
 	return fmt.Errorf("%s: %w", context, err)
 }
-
-func Is(err, target error) bool {
-	return errors.Is(err, target)
-}

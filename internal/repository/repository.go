@@ -17,3 +17,10 @@ func newBaseRepository(db *gorm.DB) *baseRepository {
 func (b *baseRepository) ExecTx(fn func(tx *gorm.DB) error) error {
 	return b.db.Transaction(fn)
 }
+
+func paginateScope(page, perPage int) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		offset := (page - 1) * perPage
+		return db.Offset(offset).Limit(perPage)
+	}
+}
