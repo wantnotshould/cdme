@@ -30,10 +30,15 @@ type AESGCM struct {
 	AAD string `json:"aad"`
 }
 
+type JWT struct {
+	Key string `json:"key"`
+}
+
 type Config struct {
 	Scheme Scheme `json:"scheme"`
 	Hash   Hash   `json:"hash"`
 	AESGCM AESGCM `json:"aesgcm"`
+	JWT    JWT    `json:"jwt"`
 }
 
 func (c *Config) validate() error {
@@ -52,6 +57,10 @@ func (c *Config) validate() error {
 
 	if strings.TrimSpace(c.AESGCM.AAD) == "" {
 		return utils.Err("aesgcm.aad cannot be empty (recommended for security)")
+	}
+
+	if len(c.JWT.Key) < 32 {
+		return utils.Err("jwt.key too weak, use at least 32 bytes")
 	}
 
 	return nil
@@ -73,13 +82,17 @@ func defaultConfig() *Config {
 			Port: ":2603",
 		},
 		Hash: Hash{
-			// openssl rand -base64 32
-			Key: "QO4YBuG6bpkHv3A0yihyif/eu7wynkOu9T4SxJSGH64=",
+			// openssl rand -base64 32 | cut -c1-32
+			Key: "ykSlmOR2yL9Et/lO4QeTgzDuvU0/GHVk",
 		},
 		AESGCM: AESGCM{
-			Key: "xtPI1yeKbA7uctSMAx/j6z+/CSyPa0adeMI79np3HvA=",
 			// openssl rand -base64 32 | cut -c1-32
-			AAD: "LHoftgaLIq3lip/us6Dnvff5FKPnu7mZ",
+			Key: "57cVg1gFKk/zBavQeIGad7hbqe7MfUMf",
+			// openssl rand -base64 32
+			AAD: "u1Y+M42Y9R32oGcSAeHs7NZniyO7xLAG5tmMwW1h9ms=",
+		},
+		JWT: JWT{
+			Key: "GO0nIDh1aPYK3Kzlv4Ljxwvta3F0aEKr8JOqHHsoVxQ=",
 		},
 	}
 }
