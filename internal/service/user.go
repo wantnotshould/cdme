@@ -7,6 +7,7 @@ package service
 import (
 	"context"
 
+	"code.cn/blog/conf"
 	"code.cn/blog/internal/auth/token"
 	"code.cn/blog/internal/cache/redis"
 	"code.cn/blog/internal/consts"
@@ -60,8 +61,8 @@ func (s *UserService) issueTokens(
 		return nil, utils.Err("failed to generate tokens")
 	}
 
-	atHash := hash.HashBlake2b256Hex([]byte(res.AccessToken))
-	rtHash := hash.HashBlake2b256Hex([]byte(res.RefreshToken))
+	atHash := hash.HMACBlake2b256Hex([]byte(res.AccessToken), []byte(conf.Get().Hash.Key))
+	rtHash := hash.HMACBlake2b256Hex([]byte(res.RefreshToken), []byte(conf.Get().Hash.Key))
 
 	err = s.userTokenRepo.ExecTx(func(tx *gorm.DB) error {
 		repo := s.userTokenRepo.WithTx(tx)

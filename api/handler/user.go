@@ -11,6 +11,7 @@ import (
 	"code.cn/blog/api/common"
 	"code.cn/blog/api/common/code"
 	"code.cn/blog/api/middleware"
+	"code.cn/blog/conf"
 	"code.cn/blog/internal/auth/token"
 	"code.cn/blog/internal/cache/redis"
 	"code.cn/blog/internal/consts"
@@ -69,7 +70,7 @@ func (h *UserHandler) Profile(c *gin.Context) {
 func (h *UserHandler) RefreshToken(c *gin.Context) {
 	refreshToken, err := c.Cookie(consts.RTName)
 	if err != nil || refreshToken == "" {
-		common.Custom(c.Writer, http.StatusUnauthorized, "Session expired, please log in again")
+		common.Custom(c.Writer, http.StatusUnauthorized, "session expired, please log in again")
 		return
 	}
 
@@ -82,7 +83,7 @@ func (h *UserHandler) RefreshToken(c *gin.Context) {
 		common.CleanAuthCookie(c.Writer)
 		message := "Invalid refresh token"
 		if errors.Is(err, jwt.ErrTokenExpired) {
-			message = "Refresh token expired, please log in again"
+			message = "refresh token expired, please log in again"
 		}
 
 		common.Custom(c.Writer, http.StatusUnauthorized, message)
@@ -91,12 +92,12 @@ func (h *UserHandler) RefreshToken(c *gin.Context) {
 
 	if claims.ExpiresAt == nil || claims.ExpiresAt.Before(utils.Now()) {
 		common.CleanAuthCookie(c.Writer)
-		common.Custom(c.Writer, http.StatusUnauthorized, "Token expired")
+		common.Custom(c.Writer, http.StatusUnauthorized, "token expired")
 		return
 	}
 
 	refreshParam := req.UserRefreshToken{
-		RefreshToken: hash.HashBlake2b256Hex([]byte(refreshToken)),
+		RefreshToken: hash.HMACBlake2b256Hex([]byte(refreshToken), []byte(conf.Get().Hash.Key)),
 		IP:           ip,
 		UserAgent:    userAgent,
 	}
