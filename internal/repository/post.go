@@ -209,6 +209,22 @@ func (r *PostRepository) Delete(ctx context.Context, param req.DeletePathParams)
 		Delete(&model.Post{}).Error
 }
 
+func (r *PostRepository) CountByIDsAndUser(
+	ctx context.Context,
+	userID int,
+	ids []int,
+) (int64, error) {
+
+	var count int64
+
+	err := r.baseQuery(ctx).
+		Where("user_id = ?", userID).
+		Where("id IN ?", ids).
+		Count(&count).Error
+
+	return count, err
+}
+
 func (r *PostRepository) BatchDelete(ctx context.Context, param req.BatchDelete) error {
 	if len(param.DeleteIds) == 0 {
 		return nil

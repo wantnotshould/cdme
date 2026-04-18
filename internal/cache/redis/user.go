@@ -44,6 +44,10 @@ func (r *Redis) GetAccessToken(
 	).Result()
 }
 
+func (r *Redis) DelAccessToken(ctx context.Context, userID int) error {
+	return r.client.Del(ctx, r.accessTokenKey(userID)).Err()
+}
+
 func (r *Redis) SetRefreshToken(
 	ctx context.Context,
 	userID int,
@@ -68,4 +72,8 @@ func (r *Redis) GetRefreshToken(
 		ctx,
 		r.refreshTokenKey(userID),
 	).Result()
+}
+
+func (r *Redis) DelRefreshToken(ctx context.Context, userID int) error {
+	return r.client.Del(ctx, r.refreshTokenKey(userID)).Err()
 }

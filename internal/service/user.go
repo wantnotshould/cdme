@@ -11,6 +11,7 @@ import (
 	"code.cn/blog/internal/cache/redis"
 	"code.cn/blog/internal/consts"
 	"code.cn/blog/internal/dto/req"
+	"code.cn/blog/internal/dto/resp"
 	"code.cn/blog/internal/model"
 	"code.cn/blog/internal/repository"
 	"code.cn/blog/pkg/crypto/hash"
@@ -127,6 +128,25 @@ func (s *UserService) Login(ctx context.Context, param req.UserLogin) (*token.Re
 	}
 
 	return s.issueTokens(ctx, info, param.IP, param.UserAgent, uuid.Nil)
+}
+
+func (s *UserService) Profile(ctx context.Context, userID int) (*resp.UserProfile, error) {
+	if userID <= 0 {
+		return nil, utils.Err("invalid user id")
+	}
+
+	info, err := s.repo.InfoByID(ctx, userID)
+	if err != nil {
+		return nil, utils.Err("failed to get user profile")
+	}
+
+	if info == nil {
+		return nil, utils.Err("user not found")
+	}
+
+	return &resp.UserProfile{
+		Username: info.Username,
+	}, nil
 }
 
 func (s *UserService) RefreshToken(
