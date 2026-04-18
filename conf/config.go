@@ -34,11 +34,19 @@ type JWT struct {
 	Key string `json:"key"`
 }
 
+type Redis struct {
+	Addr     string `json:"addr"`
+	Password string `json:"password"`
+	DB       int    `json:"db"`
+	Prefix   string `json:"prefix"`
+}
+
 type Config struct {
 	Scheme Scheme `json:"scheme"`
 	Hash   Hash   `json:"hash"`
 	AESGCM AESGCM `json:"aesgcm"`
 	JWT    JWT    `json:"jwt"`
+	Redis  Redis  `json:"redis"`
 }
 
 func (c *Config) validate() error {
@@ -61,6 +69,14 @@ func (c *Config) validate() error {
 
 	if len(c.JWT.Key) < 32 {
 		return utils.Err("jwt.key too weak, use at least 32 bytes")
+	}
+
+	if c.Redis.Addr == "" {
+		return utils.Err("redis address can't be empty")
+	}
+
+	if c.Redis.Prefix == "" {
+		return utils.Err("redis prefix can't be empty")
 	}
 
 	return nil
@@ -93,6 +109,12 @@ func defaultConfig() *Config {
 		},
 		JWT: JWT{
 			Key: "GO0nIDh1aPYK3Kzlv4Ljxwvta3F0aEKr8JOqHHsoVxQ=",
+		},
+		Redis: Redis{
+			Addr:     "127.0.0.1:6379",
+			Password: "",
+			DB:       0,
+			Prefix:   "cdme_blog",
 		},
 	}
 }

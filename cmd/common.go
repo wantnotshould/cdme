@@ -6,12 +6,16 @@ package cmd
 
 import (
 	"code.cn/blog/conf"
+	"code.cn/blog/internal/cache/redis"
 	"code.cn/blog/pkg/crypto/aes"
 )
 
 func setup() {
 	conf.Init()
 	aes.Init([]byte(conf.Get().AESGCM.Key))
+	redis.Init()
 }
 
-func release() {}
+func release() {
+	redis.DB().Close()
+}
