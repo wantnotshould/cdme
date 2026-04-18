@@ -29,6 +29,12 @@ func (r *PostRepository) baseQuery(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx).Model(&model.Post{})
 }
 
+func (r *PostRepository) webQuery(ctx context.Context) *gorm.DB {
+	return r.db.WithContext(ctx).
+		Model(&model.Post{}).
+		Where("status = ?", model.PostStatusPublished)
+}
+
 func (r *PostRepository) buildQuery(db *gorm.DB, param req.PostList) *gorm.DB {
 	db = db.Where("user_id = ?", param.UserID)
 
@@ -83,6 +89,40 @@ func (r *PostRepository) executeList(
 	return list, count, err
 }
 
+func (r *PostRepository) WebList(
+	ctx context.Context,
+	param req.PostWebList,
+) ([]model.Post, int64, error) {
+
+	query := r.webQuery(ctx)
+
+	selectFields := []string{
+		"title",
+		"slug",
+		"summary",
+		"created_at",
+	}
+
+	return r.executeList(query, param.Page, param.PerPage, selectFields)
+}
+
+func (r *PostRepository) WebDetail(ctx context.Context, slug string) (*model.Post, error) {
+	var info model.Post
+
+	err := r.webQuery(ctx).
+		Where("slug = ?", slug).
+		Take(&info).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &info, nil
+}
+
 func (r *PostRepository) List(ctx context.Context, param req.PostList) ([]model.Post, int64, error) {
 	query := r.buildQuery(r.baseQuery(ctx), param)
 
@@ -94,12 +134,12 @@ func (r *PostRepository) List(ctx context.Context, param req.PostList) ([]model.
 	return r.executeList(query, param.Page, param.PerPage, fields)
 }
 
-func (r *PostRepository) Info(ctx context.Context, infoID, userID int) (*model.Post, error) {
+func (r *PostRepository) Info(ctx context.Context, param req.InfoPathParams) (*model.Post, error) {
 	var info model.Post
 
 	err := r.baseQuery(ctx).
-		Where("id = ?", infoID).
-		Where("user_id = ?", userID).
+		Where("id = ?", param.InfoID).
+		Where("user_id = ?", param.UserID).
 		Take(&info).Error
 
 	if err != nil {

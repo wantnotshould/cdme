@@ -28,6 +28,23 @@ func (r *UserRepository) baseQuery(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx).Model(&model.User{})
 }
 
+func (r *UserRepository) InfoByID(ctx context.Context, id int) (*model.User, error) {
+	var user model.User
+
+	err := r.baseQuery(ctx).
+		Where("id = ?", id).
+		Take(&user).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 func (r *UserRepository) InfoByUsername(ctx context.Context, username string) (*model.User, error) {
 	var user model.User
 
