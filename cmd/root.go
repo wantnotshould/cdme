@@ -41,4 +41,5 @@ func init() {
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 	rootCmd.PersistentFlags().StringVar(&flags.Data, "data", "data", "Data directory")
+	rootCmd.PersistentFlags().BoolVar(&flags.Debug, "debug", false, "Enable debug mode")
 }

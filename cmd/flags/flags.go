@@ -5,5 +5,6 @@
 package flags
 
 var (
-	Data string
+	Data  string
+	Debug bool
 )
