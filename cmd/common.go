@@ -5,13 +5,58 @@
 package cmd
 
 import (
+	"context"
 	"log"
+	"sync"
+	"time"
 
 	"code.cn/blog/conf"
 	"code.cn/blog/internal/cache/redis"
 	"code.cn/blog/internal/database"
+	"code.cn/blog/internal/repository"
 	"code.cn/blog/pkg/crypto/aes"
 )
+
+var (
+	cleanupCancel context.CancelFunc
+	cleanupWG     sync.WaitGroup
+)
+
+func runCleanupLoop(
+	ctx context.Context,
+	job func(context.Context) (int64, error),
+	interval time.Duration,
+) {
+	defer cleanupWG.Done()
+
+	_, _ = job(ctx)
+
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			_, _ = job(ctx)
+
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
+func startCleanupTasks() {
+	var ctx context.Context
+	ctx, cleanupCancel = context.WithCancel(context.Background())
+
+	repo := repository.NewUserTokenRepository(database.Get())
+
+	cleanupWG.Add(1)
+	go runCleanupLoop(ctx, repo.CleanupExpired, 1*time.Hour)
+
+	cleanupWG.Add(1)
+	go runCleanupLoop(ctx, repo.CleanupRevoked, 6*time.Hour)
+}
 
 func setup() {
 	conf.Init()
@@ -26,9 +71,17 @@ func setup() {
 	if err := database.Migrate(db); err != nil {
 		log.Fatal("database migrate failed:", err)
 	}
+
+	startCleanupTasks()
 }
 
 func release() {
+	if cleanupCancel != nil {
+		cleanupCancel()
+	}
+
+	cleanupWG.Wait()
+
 	redis.DB().Close()
 
 	if database.Instance() != nil {
