@@ -4,10 +4,14 @@
 
 package cmd
 
-import "code.cn/blog/conf"
+import (
+	"code.cn/blog/conf"
+	"code.cn/blog/pkg/crypto/aes"
+)
 
 func setup() {
 	conf.Init()
+	aes.Init([]byte(conf.Get().AESGCM.Key))
 }
 
 func release() {}

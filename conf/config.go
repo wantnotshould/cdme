@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -20,14 +21,39 @@ type Scheme struct {
 	Port string `json:"port"`
 }
 
+type Hash struct {
+	Key string `json:"key"`
+}
+
+type AESGCM struct {
+	Key string `json:"key"`
+	AAD string `json:"aad"`
+}
+
 type Config struct {
 	Scheme Scheme `json:"scheme"`
+	Hash   Hash   `json:"hash"`
+	AESGCM AESGCM `json:"aesgcm"`
 }
 
 func (c *Config) validate() error {
 	if c.Scheme.Port == "" || !strings.HasPrefix(c.Scheme.Port, ":") {
 		return utils.Err("scheme.Port is empty or format error")
 	}
+
+	allowedLens := []int{16, 24, 32}
+	if !slices.Contains(allowedLens, len(c.Hash.Key)) {
+		return utils.Err("invalid hash.key length (16/24/32)")
+	}
+
+	if !slices.Contains(allowedLens, len(c.AESGCM.Key)) {
+		return utils.Err("invalid aesgcm.key length (16/24/32)")
+	}
+
+	if strings.TrimSpace(c.AESGCM.AAD) == "" {
+		return utils.Err("aesgcm.aad cannot be empty (recommended for security)")
+	}
+
 	return nil
 }
 
@@ -45,6 +71,15 @@ func defaultConfig() *Config {
 	return &Config{
 		Scheme: Scheme{
 			Port: ":2603",
+		},
+		Hash: Hash{
+			// openssl rand -base64 32
+			Key: "QO4YBuG6bpkHv3A0yihyif/eu7wynkOu9T4SxJSGH64=",
+		},
+		AESGCM: AESGCM{
+			Key: "xtPI1yeKbA7uctSMAx/j6z+/CSyPa0adeMI79np3HvA=",
+			// openssl rand -base64 32 | cut -c1-32
+			AAD: "LHoftgaLIq3lip/us6Dnvff5FKPnu7mZ",
 		},
 	}
 }
