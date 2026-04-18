@@ -2,10 +2,12 @@
 // Author: https://cdme.cn
 // Email: hi@cdme.cn
 
-package main
+package cmd
 
-import "code.cn/blog/cmd"
+import "code.cn/blog/conf"
 
-func main() {
-	cmd.Execute()
+func setup() {
+	conf.Init()
 }
+
+func release() {}

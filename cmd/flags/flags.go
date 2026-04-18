@@ -2,10 +2,8 @@
 // Author: https://cdme.cn
 // Email: hi@cdme.cn
 
-package main
+package flags
 
-import "code.cn/blog/cmd"
-
-func main() {
-	cmd.Execute()
-}
+var (
+	Data string
+)
