@@ -31,7 +31,7 @@ func Init(e *gin.Engine) {
 		user := admin.Group("/users")
 		{
 			user.GET("/profile", app.UserHandler.Profile)
-			user.POST("/logout", app.UserHandler.Logout)
+			user.GET("/logout", app.UserHandler.Logout)
 		}
 
 		post := admin.Group("/posts")

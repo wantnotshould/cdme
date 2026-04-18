@@ -21,7 +21,8 @@ import (
 )
 
 type Scheme struct {
-	Port string `json:"port"`
+	Port      string `json:"port"`
+	PublicKey string `json:"public_key"`
 }
 
 type Hash struct {
@@ -98,6 +99,10 @@ type Config struct {
 func (c *Config) validate() error {
 	if c.Scheme.Port == "" || !strings.HasPrefix(c.Scheme.Port, ":") {
 		return utils.Err("scheme.Port is empty or format error")
+	}
+
+	if c.Scheme.PublicKey == "" {
+		return utils.Err("scheme.public_key annot be empty")
 	}
 
 	allowedLens := []int{16, 24, 32}
@@ -179,7 +184,8 @@ func defaultConfig() *Config {
 
 	return &Config{
 		Scheme: Scheme{
-			Port: ":2603",
+			Port:      ":2603",
+			PublicKey: "大佬别攻击，高抬贵手。感谢！ Guru, no hacking. thanks!",
 		},
 		Hash: Hash{
 			// openssl rand -base64 32 | cut -c1-32

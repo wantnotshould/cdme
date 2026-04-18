@@ -109,7 +109,7 @@ func Anonymous() gin.HandlerFunc {
 		}
 
 		// avoid string() copy if possible
-		expectedSig := hash.HMACBlake2b256Hex(buf.Bytes(), []byte(conf.Get().Hash.Key))
+		expectedSig := hash.HMACBlake2b256Hex(buf.Bytes(), []byte(conf.Get().Scheme.PublicKey))
 
 		if expectedSig != clientSig {
 			common.Custom(c.Writer, http.StatusUnauthorized, "sign error")
