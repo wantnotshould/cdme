@@ -6,11 +6,11 @@ package redis
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
 	"code.cn/blog/conf"
-	"code.cn/blog/pkg/utils"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -71,7 +71,7 @@ func (r *Redis) Close() error {
 
 func (r *Redis) Get(ctx context.Context, key string) (string, error) {
 	s, err := r.client.Get(ctx, r.key(key)).Result()
-	if utils.Is(err, redis.Nil) {
+	if errors.Is(err, redis.Nil) {
 		return "", nil
 	}
 	return s, err
