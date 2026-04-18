@@ -19,6 +19,7 @@ import (
 	"code.cn/blog/internal/service"
 	"code.cn/blog/pkg/crypto/hash"
 	"code.cn/blog/pkg/utils"
+	"code.cn/blog/pkg/validator"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -36,6 +37,16 @@ func (h *UserHandler) Login(c *gin.Context) {
 	var param req.UserLogin
 	if err := c.ShouldBind(&param); err != nil {
 		common.Fail(c.Writer, code.ParamErr)
+		return
+	}
+
+	if !validator.UsernameRe.MatchString(param.Username) {
+		common.FailMessage(c.Writer, "invalid username")
+		return
+	}
+
+	if !validator.PasswordRe.MatchString(param.Password) {
+		common.FailMessage(c.Writer, "invalid password")
 		return
 	}
 
