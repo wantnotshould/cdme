@@ -70,6 +70,14 @@ func (s *PostService) WebDetail(
 	}, nil
 }
 
+func (s *PostService) Category() []model.PostOption {
+	return model.PostCategoryOptions
+}
+
+func (s *PostService) Status() []model.PostOption {
+	return model.PostStatusOptions
+}
+
 func validatePost(status uint8, categoryID uint8) error {
 
 	if status > 0 && !model.IsValidPostStatus(status) {
@@ -149,11 +157,11 @@ func (s *PostService) Create(ctx context.Context, param req.PostCreate) error {
 
 	post := &model.Post{
 		Title:      param.Title,
-		CategoryID: model.PostCategory(param.CategoryID),
+		CategoryID: param.CategoryID,
 		Slug:       param.Slug,
 		Summary:    param.Summary,
 		Content:    param.Content,
-		Status:     model.PostStatus(param.Status),
+		Status:     param.Status,
 		UserID:     param.UserID,
 	}
 

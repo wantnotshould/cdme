@@ -42,6 +42,8 @@ func Init(e *gin.Engine) {
 			post.PUT("/:id", app.PostHandler.Update)
 			post.DELETE("/:id", app.PostHandler.Delete)
 			post.POST("/batch-delete", app.PostHandler.BatchDelete)
+			post.GET("/categories", app.PostHandler.Category)
+			post.GET("/statuses", app.PostHandler.Status)
 		}
 	}
 
