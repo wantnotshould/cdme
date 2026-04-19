@@ -31,7 +31,7 @@ func Init(e *gin.Engine) {
 		user := admin.Group("/users")
 		{
 			user.GET("/profile", app.UserHandler.Profile)
-			user.POST("/logout", app.UserHandler.Logout)
+			user.GET("/logout", app.UserHandler.Logout)
 		}
 
 		post := admin.Group("/posts")
@@ -42,6 +42,8 @@ func Init(e *gin.Engine) {
 			post.PUT("/:id", app.PostHandler.Update)
 			post.DELETE("/:id", app.PostHandler.Delete)
 			post.POST("/batch-delete", app.PostHandler.BatchDelete)
+			post.GET("/categories", app.PostHandler.Category)
+			post.GET("/statuses", app.PostHandler.Status)
 		}
 	}
 

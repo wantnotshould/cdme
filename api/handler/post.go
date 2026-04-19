@@ -60,6 +60,14 @@ func (h *PostHandler) WebDetail(c *gin.Context) {
 	common.OkData(c.Writer, info)
 }
 
+func (h *PostHandler) Category(c *gin.Context) {
+	common.OkData(c.Writer, h.srv.Category())
+}
+
+func (h *PostHandler) Status(c *gin.Context) {
+	common.OkData(c.Writer, h.srv.Status())
+}
+
 func (h *PostHandler) List(c *gin.Context) {
 	var param req.PostList
 	if err := c.ShouldBindQuery(&param); err != nil {
