@@ -30,10 +30,18 @@ func DB() *Redis {
 }
 
 func newRedis() *Redis {
+	cfg := conf.Get().Redis
 	opt := &redis.Options{
-		Addr:     conf.Get().Redis.Addr,
-		Password: conf.Get().Redis.Password,
-		DB:       conf.Get().Redis.DB,
+		Addr:         cfg.Addr,
+		Password:     cfg.Password,
+		DB:           cfg.DB,
+		PoolSize:     cfg.PoolSize,
+		MinIdleConns: cfg.MinIdleConns,
+		MaxRetries:   cfg.MaxRetries,
+		DialTimeout:  cfg.DialTimeout,
+		ReadTimeout:  cfg.ReadTimeout,
+		WriteTimeout: cfg.WriteTimeout,
+		PoolTimeout:  cfg.PoolTimeout,
 	}
 
 	c := redis.NewClient(opt)

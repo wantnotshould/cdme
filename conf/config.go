@@ -39,10 +39,17 @@ type JWT struct {
 }
 
 type Redis struct {
-	Addr     string `json:"addr"`
-	Password string `json:"password"`
-	DB       int    `json:"db"`
-	Prefix   string `json:"prefix"`
+	Addr         string        `json:"addr"`
+	Password     string        `json:"password"`
+	DB           int           `json:"db"`
+	Prefix       string        `json:"prefix"`
+	PoolSize     int           `json:"pool_size"`
+	MinIdleConns int           `json:"min_idle_conns"`
+	MaxRetries   int           `json:"max_retries"`
+	DialTimeout  time.Duration `json:"dial_timeout"`
+	ReadTimeout  time.Duration `json:"read_timeout"`
+	WriteTimeout time.Duration `json:"write_timeout"`
+	PoolTimeout  time.Duration `json:"pool_timeout"`
 }
 
 type Database struct {
@@ -130,6 +137,34 @@ func (c *Config) validate() error {
 		return utils.Err("redis prefix can't be empty")
 	}
 
+	if c.Redis.PoolSize <= 0 {
+		return utils.Err("redis pool_size must be > 0")
+	}
+
+	if c.Redis.MinIdleConns <= 0 {
+		return utils.Err("redis min_idle_conns must be > 0")
+	}
+
+	if c.Redis.MaxRetries < 0 {
+		return utils.Err("redis max_retries must be >= 0")
+	}
+
+	if c.Redis.DialTimeout <= 0 {
+		return utils.Err("redis dial_timeout must be > 0")
+	}
+
+	if c.Redis.ReadTimeout <= 0 {
+		return utils.Err("redis read_timeout must be > 0")
+	}
+
+	if c.Redis.WriteTimeout <= 0 {
+		return utils.Err("redis write_timeout must be > 0")
+	}
+
+	if c.Redis.PoolTimeout <= 0 {
+		return utils.Err("redis pool_timeout must be > 0")
+	}
+
 	if c.Database.Host == "" {
 		return utils.Err("database host can't be empty")
 	}
@@ -201,10 +236,17 @@ func defaultConfig() *Config {
 			Key: "GO0nIDh1aPYK3Kzlv4Ljxwvta3F0aEKr8JOqHHsoVxQ=",
 		},
 		Redis: Redis{
-			Addr:     "127.0.0.1:6379",
-			Password: "",
-			DB:       0,
-			Prefix:   "cdme_blog",
+			Addr:         "127.0.0.1:6379",
+			Password:     "",
+			DB:           0,
+			Prefix:       "cdme_bog",
+			PoolSize:     100,
+			MinIdleConns: 10,
+			MaxRetries:   3,
+			DialTimeout:  5 * time.Second,
+			ReadTimeout:  3 * time.Second,
+			WriteTimeout: 3 * time.Second,
+			PoolTimeout:  4 * time.Second,
 		},
 		Database: Database{
 			Host:         "127.0.0.1",
