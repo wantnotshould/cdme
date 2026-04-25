@@ -21,12 +21,12 @@ func Err(parts ...string) error {
 	}
 }
 
-func Wrap(content string, err error) error {
+func Wrap(context string, err error) error {
 	if err == nil {
 		return nil
 	}
 
-	return fmt.Errorf("%s:%w", content, err)
+	return fmt.Errorf("%s: %w", context, err)
 }
 
 func Wrapf(err error, format string, args ...any) error {
