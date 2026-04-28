@@ -9,7 +9,7 @@ require (
 	github.com/google/wire v0.7.0
 	github.com/redis/go-redis/v9 v9.18.0
 	github.com/spf13/cobra v1.10.2
-	go.uber.org/zap v1.27.1
+	go.uber.org/zap v1.28.0
 	golang.org/x/crypto v0.50.0
 	golang.org/x/net v0.53.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
