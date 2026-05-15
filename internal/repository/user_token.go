@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"code.cn/blog/internal/model"
-	"code.cn/blog/pkg/utils"
 	"github.com/google/uuid"
+	"github.com/xiayoudi/ud"
 	"gorm.io/gorm"
 )
 
@@ -38,7 +38,7 @@ func (r *UserTokenRepository) isValid(
 	jti uuid.UUID,
 ) (bool, error) {
 
-	now := utils.Now()
+	now := ud.Now()
 
 	var exists bool
 
@@ -79,7 +79,7 @@ func (r *UserTokenRepository) Add(ctx context.Context, userToken *model.UserToke
 }
 
 func (r *UserTokenRepository) RevokeByJti(ctx context.Context, jti uuid.UUID) error {
-	now := utils.Now()
+	now := ud.Now()
 
 	return r.baseQuery(ctx).
 		Where("jti = ?", jti[:]).
@@ -93,7 +93,7 @@ func (r *UserTokenRepository) RevokeBySessionID(
 	sessionID uuid.UUID,
 ) error {
 
-	now := utils.Now()
+	now := ud.Now()
 
 	return r.baseQuery(ctx).
 		Where("user_id = ?", userID).
@@ -103,7 +103,7 @@ func (r *UserTokenRepository) RevokeBySessionID(
 }
 
 func (r *UserTokenRepository) RevokeAllByUserID(ctx context.Context, userID int) error {
-	now := utils.Now()
+	now := ud.Now()
 
 	return r.baseQuery(ctx).
 		Where("user_id = ?", userID).
@@ -112,7 +112,7 @@ func (r *UserTokenRepository) RevokeAllByUserID(ctx context.Context, userID int)
 }
 
 func (r *UserTokenRepository) CleanupExpired(ctx context.Context) (int64, error) {
-	return r.cleanupByCondition(ctx, "expires_at < ?", utils.Now().Add(-24*time.Hour))
+	return r.cleanupByCondition(ctx, "expires_at < ?", ud.Now().Add(-24*time.Hour))
 }
 
 func (r *UserTokenRepository) CleanupRevoked(ctx context.Context) (int64, error) {

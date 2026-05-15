@@ -15,7 +15,7 @@ import (
 	"code.cn/blog/internal/database"
 	"code.cn/blog/internal/logger"
 	"code.cn/blog/internal/repository"
-	"code.cn/blog/pkg/crypto/aes"
+	"github.com/xiayoudi/ud/aes"
 )
 
 var (

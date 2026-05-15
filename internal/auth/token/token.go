@@ -13,16 +13,16 @@ import (
 
 	"code.cn/blog/conf"
 	"code.cn/blog/internal/consts"
-	"code.cn/blog/pkg/crypto/aes"
-	"code.cn/blog/pkg/crypto/hash"
-	"code.cn/blog/pkg/utils"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/xiayoudi/ud"
+	"github.com/xiayoudi/ud/aes"
+	"github.com/xiayoudi/ud/hash"
 )
 
 var (
-	errInvalidToken = utils.Err("invalid token")
-	errTokenExpired = utils.Err("token expired")
+	errInvalidToken = ud.Err("invalid token")
+	errTokenExpired = ud.Err("token expired")
 )
 
 type Plaintext struct {
@@ -55,15 +55,15 @@ type Response struct {
 func encrypt(p Plaintext) (string, error) {
 	plainBytes, err := json.Marshal(p)
 	if err != nil {
-		return "", utils.Wrap("encrypt: marshal failed", err)
+		return "", ud.Wrap(err, "encrypt: marshal failed")
 	}
 
-	cipherBytes, err := aes.Global().Encrypt(
+	cipherBytes, err := aes.Encrypt(
 		plainBytes,
 		[]byte(conf.Get().AESGCM.AAD),
 	)
 	if err != nil {
-		return "", utils.Wrap("encrypt: aes encrypt failed", err)
+		return "", ud.Wrap(err, "encrypt: aes encrypt failed")
 	}
 
 	return base64.StdEncoding.EncodeToString(cipherBytes), nil
@@ -72,27 +72,27 @@ func encrypt(p Plaintext) (string, error) {
 func decrypt[T any](cipherText string) (*T, error) {
 	rawBytes, err := base64.StdEncoding.DecodeString(cipherText)
 	if err != nil {
-		return nil, utils.Wrap("decrypt: base64 decode failed", err)
+		return nil, ud.Wrap(err, "decrypt: base64 decode failed")
 	}
 
-	plainBytes, err := aes.Global().Decrypt(
+	plainBytes, err := aes.Decrypt(
 		rawBytes,
 		[]byte(conf.Get().AESGCM.AAD),
 	)
 	if err != nil {
-		return nil, utils.Wrap("decrypt: aes decrypt failed", err)
+		return nil, ud.Wrap(err, "decrypt: aes decrypt failed")
 	}
 
 	var out T
 	if err := json.Unmarshal(plainBytes, &out); err != nil {
-		return nil, utils.Wrap("decrypt: json unmarshal failed", err)
+		return nil, ud.Wrap(err, "decrypt: json unmarshal failed")
 	}
 
 	return &out, nil
 }
 
 func Generate(param Param, accessJti, refreshJti uuid.UUID) (*Response, error) {
-	now := utils.Now()
+	now := ud.Now()
 
 	accessExp := now.Add(consts.ATDuration)
 	refreshExp := now.Add(consts.RTDuration)
@@ -111,7 +111,7 @@ func Generate(param Param, accessJti, refreshJti uuid.UUID) (*Response, error) {
 
 	accessPayloadEncrypted, err := encrypt(accessPayloadPlain)
 	if err != nil {
-		return nil, utils.Err("failed to encrypt access token")
+		return nil, ud.Err("failed to encrypt access token")
 	}
 
 	accessClaims := &Claims{
@@ -143,7 +143,7 @@ func Generate(param Param, accessJti, refreshJti uuid.UUID) (*Response, error) {
 
 	refreshPayloadEncrypted, err := encrypt(refreshPayloadPlain)
 	if err != nil {
-		return nil, utils.Err("failed to encrypt refresh token")
+		return nil, ud.Err("failed to encrypt refresh token")
 	}
 
 	refreshClaims := &Claims{
@@ -201,7 +201,7 @@ func Parse(tokenString, ip, userAgent string) (*Claims, error) {
 		}
 
 		if fmt.Sprintf("%d", decryptedPayload.UserID) != claims.Subject {
-			return nil, utils.Err("token identity mismatch")
+			return nil, ud.Err("token identity mismatch")
 		}
 
 		claims.DecryptedPayload = *decryptedPayload
@@ -213,7 +213,7 @@ func Parse(tokenString, ip, userAgent string) (*Claims, error) {
 		)
 
 		if !valid {
-			return nil, utils.Err("client binding mismatch")
+			return nil, ud.Err("client binding mismatch")
 		}
 	}
 

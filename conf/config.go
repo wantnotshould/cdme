@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"code.cn/blog/cmd/flags"
-	"code.cn/blog/pkg/utils"
+	"github.com/xiayoudi/ud"
 )
 
 type Scheme struct {
@@ -105,100 +105,100 @@ type Config struct {
 
 func (c *Config) validate() error {
 	if c.Scheme.Port == "" || !strings.HasPrefix(c.Scheme.Port, ":") {
-		return utils.Err("scheme.Port is empty or format error")
+		return ud.Err("scheme.Port is empty or format error")
 	}
 
 	if c.Scheme.PublicKey == "" {
-		return utils.Err("scheme.public_key annot be empty")
+		return ud.Err("scheme.public_key annot be empty")
 	}
 
 	allowedLens := []int{16, 24, 32}
 	if !slices.Contains(allowedLens, len(c.Hash.Key)) {
-		return utils.Err("invalid hash.key length (16/24/32)")
+		return ud.Err("invalid hash.key length (16/24/32)")
 	}
 
 	if !slices.Contains(allowedLens, len(c.AESGCM.Key)) {
-		return utils.Err("invalid aesgcm.key length (16/24/32)")
+		return ud.Err("invalid aesgcm.key length (16/24/32)")
 	}
 
 	if strings.TrimSpace(c.AESGCM.AAD) == "" {
-		return utils.Err("aesgcm.aad cannot be empty (recommended for security)")
+		return ud.Err("aesgcm.aad cannot be empty (recommended for security)")
 	}
 
 	if len(c.JWT.Key) < 32 {
-		return utils.Err("jwt.key too weak, use at least 32 bytes")
+		return ud.Err("jwt.key too weak, use at least 32 bytes")
 	}
 
 	if c.Redis.Addr == "" {
-		return utils.Err("redis address can't be empty")
+		return ud.Err("redis address can't be empty")
 	}
 
 	if c.Redis.Prefix == "" {
-		return utils.Err("redis prefix can't be empty")
+		return ud.Err("redis prefix can't be empty")
 	}
 
 	if c.Redis.PoolSize <= 0 {
-		return utils.Err("redis pool_size must be > 0")
+		return ud.Err("redis pool_size must be > 0")
 	}
 
 	if c.Redis.MinIdleConns <= 0 {
-		return utils.Err("redis min_idle_conns must be > 0")
+		return ud.Err("redis min_idle_conns must be > 0")
 	}
 
 	if c.Redis.MaxRetries < 0 {
-		return utils.Err("redis max_retries must be >= 0")
+		return ud.Err("redis max_retries must be >= 0")
 	}
 
 	if c.Redis.DialTimeout <= 0 {
-		return utils.Err("redis dial_timeout must be > 0")
+		return ud.Err("redis dial_timeout must be > 0")
 	}
 
 	if c.Redis.ReadTimeout <= 0 {
-		return utils.Err("redis read_timeout must be > 0")
+		return ud.Err("redis read_timeout must be > 0")
 	}
 
 	if c.Redis.WriteTimeout <= 0 {
-		return utils.Err("redis write_timeout must be > 0")
+		return ud.Err("redis write_timeout must be > 0")
 	}
 
 	if c.Redis.PoolTimeout <= 0 {
-		return utils.Err("redis pool_timeout must be > 0")
+		return ud.Err("redis pool_timeout must be > 0")
 	}
 
 	if c.Database.Host == "" {
-		return utils.Err("database host can't be empty")
+		return ud.Err("database host can't be empty")
 	}
 
 	if c.Database.Port == "" {
-		return utils.Err("database port can't be empty")
+		return ud.Err("database port can't be empty")
 	}
 
 	if c.Database.User == "" {
-		return utils.Err("database user can't be empty")
+		return ud.Err("database user can't be empty")
 	}
 
 	if c.Database.Password == "" {
-		return utils.Err("database password can't be empty")
+		return ud.Err("database password can't be empty")
 	}
 
 	if c.Database.DBName == "" {
-		return utils.Err("database name can't be empty")
+		return ud.Err("database name can't be empty")
 	}
 
 	if c.Logger.LogsDir == "" {
-		return utils.Err("logger logs_dir can't be empty")
+		return ud.Err("logger logs_dir can't be empty")
 	}
 
 	if c.Logger.MaxSize <= 0 {
-		return utils.Err("logger max_size must be greater than 0")
+		return ud.Err("logger max_size must be greater than 0")
 	}
 
 	if c.Logger.MaxBackups < 0 {
-		return utils.Err("logger max_backups can't be negative")
+		return ud.Err("logger max_backups can't be negative")
 	}
 
 	if c.Logger.MaxAge < 0 {
-		return utils.Err("logger max_age can't be negative")
+		return ud.Err("logger max_age can't be negative")
 	}
 
 	return nil
@@ -270,16 +270,16 @@ func defaultConfig() *Config {
 
 func load() error {
 	if fullPath == "" {
-		return utils.Err("config path not initialized, call Init() first")
+		return ud.Err("config path not initialized, call Init() first")
 	}
 
 	var newConfig Config
-	if err := utils.ReadJSON(fullPath, &newConfig); err != nil {
-		return utils.Wrap("failed to load config file", err)
+	if err := ud.ReadJSON(fullPath, &newConfig); err != nil {
+		return ud.Wrap(err, "failed to load config file")
 	}
 
 	if err := newConfig.validate(); err != nil {
-		return utils.Wrap("config validation failed", err)
+		return ud.Wrap(err, "config validation failed")
 	}
 
 	cfgPtr.Store(&newConfig)
@@ -298,7 +298,7 @@ func Init() {
 
 		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
 			def := defaultConfig()
-			if err := utils.WriteJSON(fullPath, &def); err != nil {
+			if err := ud.WriteJSON(fullPath, &def); err != nil {
 				log.Fatalf("failed to initialize config file: %v", err)
 			}
 			cfgPtr.Store(def)

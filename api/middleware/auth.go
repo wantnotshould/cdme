@@ -19,9 +19,9 @@ import (
 	"code.cn/blog/internal/auth/token"
 	"code.cn/blog/internal/cache/redis"
 	"code.cn/blog/internal/consts"
-	"code.cn/blog/pkg/crypto/hash"
 	"code.cn/blog/pkg/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/xiayoudi/ud/hash"
 )
 
 var bufferPool = sync.Pool{

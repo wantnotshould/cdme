@@ -15,10 +15,10 @@ import (
 	"code.cn/blog/internal/dto/resp"
 	"code.cn/blog/internal/model"
 	"code.cn/blog/internal/repository"
-	"code.cn/blog/pkg/crypto/hash"
-	"code.cn/blog/pkg/password"
-	"code.cn/blog/pkg/utils"
 	"github.com/google/uuid"
+	"github.com/xiayoudi/ud"
+	"github.com/xiayoudi/ud/hash"
+	"github.com/xiayoudi/ud/password"
 	"gorm.io/gorm"
 )
 
@@ -58,7 +58,7 @@ func (s *UserService) issueTokens(
 
 	res, err := token.Generate(param, accessJti, refreshJti)
 	if err != nil {
-		return nil, utils.Err("failed to generate tokens")
+		return nil, ud.Err("failed to generate tokens")
 	}
 
 	atHash := hash.HMACBlake2b256Hex([]byte(res.AccessToken), []byte(conf.Get().Hash.Key))
@@ -105,7 +105,7 @@ func (s *UserService) issueTokens(
 	})
 
 	if err != nil {
-		return nil, utils.Err("failed to persist tokens")
+		return nil, ud.Err("failed to persist tokens")
 	}
 
 	s.syncRedis(ctx, user.ID, atHash, rtHash)
@@ -116,16 +116,16 @@ func (s *UserService) issueTokens(
 func (s *UserService) Login(ctx context.Context, param req.UserLogin) (*token.Response, error) {
 	info, err := s.repo.InfoByUsername(ctx, param.Username)
 	if err != nil || info == nil {
-		return nil, utils.Err("invalid username or password")
+		return nil, ud.Err("invalid username or password")
 	}
 
 	if info.Status == model.UserStatusDisabled {
-		return nil, utils.Err("user disabled")
+		return nil, ud.Err("user disabled")
 	}
 
 	ok, err := password.Validate(param.Password, string(info.PasswordHash))
 	if err != nil || !ok {
-		return nil, utils.Err("invalid username or password")
+		return nil, ud.Err("invalid username or password")
 	}
 
 	return s.issueTokens(ctx, info, param.IP, param.UserAgent, uuid.Nil)
@@ -133,16 +133,16 @@ func (s *UserService) Login(ctx context.Context, param req.UserLogin) (*token.Re
 
 func (s *UserService) Profile(ctx context.Context, userID int) (*resp.UserProfile, error) {
 	if userID <= 0 {
-		return nil, utils.Err("invalid user id")
+		return nil, ud.Err("invalid user id")
 	}
 
 	info, err := s.repo.InfoByID(ctx, userID)
 	if err != nil {
-		return nil, utils.Err("failed to get user profile")
+		return nil, ud.Err("failed to get user profile")
 	}
 
 	if info == nil {
-		return nil, utils.Err("user not found")
+		return nil, ud.Err("user not found")
 	}
 
 	return &resp.UserProfile{
@@ -161,11 +161,11 @@ func (s *UserService) RefreshToken(
 	storedHash, err := redis.DB().GetRefreshToken(ctx, userID)
 
 	if err != nil {
-		return nil, utils.Err("system busy")
+		return nil, ud.Err("system busy")
 	}
 
 	if storedHash == "" || storedHash != param.RefreshToken {
-		return nil, utils.Err("session expired")
+		return nil, ud.Err("session expired")
 	}
 
 	valid, err := s.userTokenRepo.ValidateRefresh(
@@ -175,16 +175,16 @@ func (s *UserService) RefreshToken(
 		claims.DecryptedPayload.Jti,
 	)
 	if err != nil || !valid {
-		return nil, utils.Err("session invalid")
+		return nil, ud.Err("session invalid")
 	}
 
 	info, err := s.repo.InfoByID(ctx, claims.DecryptedPayload.UserID)
 	if err != nil || info == nil {
-		return nil, utils.Err("user invalid")
+		return nil, ud.Err("user invalid")
 	}
 
 	if info.Status == model.UserStatusDisabled {
-		return nil, utils.Err("user disabled")
+		return nil, ud.Err("user disabled")
 	}
 
 	return s.issueTokens(ctx, info, param.IP, param.UserAgent, claims.SessionID)
@@ -192,7 +192,7 @@ func (s *UserService) RefreshToken(
 
 func (s *UserService) Logout(ctx context.Context, userID int, sessionID uuid.UUID) error {
 	if err := s.userTokenRepo.RevokeBySessionID(ctx, userID, sessionID); err != nil {
-		return utils.Err("logout failed")
+		return ud.Err("logout failed")
 	}
 	return nil
 }

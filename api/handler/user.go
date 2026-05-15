@@ -17,12 +17,13 @@ import (
 	"code.cn/blog/internal/consts"
 	"code.cn/blog/internal/dto/req"
 	"code.cn/blog/internal/service"
-	"code.cn/blog/pkg/crypto/hash"
 	"code.cn/blog/pkg/utils"
 	"code.cn/blog/pkg/validator"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/xiayoudi/ud"
+	"github.com/xiayoudi/ud/hash"
 )
 
 type UserHandler struct {
@@ -101,7 +102,7 @@ func (h *UserHandler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	if claims.ExpiresAt == nil || claims.ExpiresAt.Before(utils.Now()) {
+	if claims.ExpiresAt == nil || claims.ExpiresAt.Before(ud.Now()) {
 		common.CleanAuthCookie(c.Writer)
 		common.Custom(c.Writer, http.StatusUnauthorized, "token expired")
 		return

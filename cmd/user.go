@@ -14,8 +14,8 @@ import (
 	"code.cn/blog/internal/database"
 	"code.cn/blog/internal/model"
 	"code.cn/blog/internal/repository"
-	"code.cn/blog/pkg/password"
 	"github.com/spf13/cobra"
+	"github.com/xiayoudi/ud/password"
 )
 
 // userCmd represents the user command
